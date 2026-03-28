@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Question Transformation Generator</title>
+    <!-- Tailwind CSS for rapid styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom Colors & Styles based on the mockup */
+        :root {
+            --brand-red: #ff3b3b;
+            --brand-dark: #000000;
+            --brand-purple: #8b5cf6;
+        }
+        
+        body {
+            background-color: #f3f4f6;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        .bg-brand-red {
+            background-color: var(--brand-red);
+        }
+        
+        .text-brand-red {
+            color: var(--brand-red);
+        }
+
+        .border-brand-purple {
+            border-color: var(--brand-purple);
+        }
+
+        /* Custom Scrollbar for Textarea */
+        textarea::-webkit-scrollbar {
+            width: 8px;
+        }
+        textarea::-webkit-scrollbar-track {
+            background: #1a1a1a; 
+            border-radius: 4px;
+        }
+        textarea::-webkit-scrollbar-thumb {
+            background: #555; 
+            border-radius: 4px;
+        }
+        textarea::-webkit-scrollbar-thumb:hover {
+            background: #777; 
+        }
+
+        /* Dropdown Animation */
+        .dropdown-menu {
+            transition: all 0.2s ease-in-out;
+            transform-origin: top;
+        }
+        
+        /* Modal Overlay */
+        #modal-overlay {
+            backdrop-filter: blur(2px);
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 min-h-screen flex flex-col items-center">
+
+    <!-- Main Container matching the visual layout -->
+    <div class="max-w-6xl w-full mx-auto flex flex-col md:flex-row gap-6 md:gap-10 mt-4">
+        
+        <!-- Left Column (Input Area) -->
+        <div class="flex-1 flex flex-col gap-4">
+            <!-- Title Bar -->
+            <div class="bg-brand-red text-white text-center py-3 px-6 rounded-lg font-bold text-xl shadow-md w-full max-w-md mx-auto md:mx-0">
+                Question Transformation Generator
+            </div>
+
+            <!-- Black Text Input Area -->
+            <textarea 
+                id="passage-input" 
+                class="w-full h-80 bg-black text-gray-200 border-2 border-brand-purple rounded-xl p-5 text-lg outline-none focus:ring-2 focus:ring-purple-500 resize-none shadow-lg"
+                placeholder="Paste your English passage here."
+            ></textarea>
+
+            <!-- Action Row -->
+            <div class="flex flex-col sm:flex-row gap-4 mt-2">
+                <!-- Generate Button -->
+                <button 
+                    id="generate-btn"
+                    class="bg-brand-red text-white font-bold py-3 px-8 rounded-lg shadow-md hover:bg-red-600 active:scale-95 transition-all w-full sm:w-auto text-lg"
+                >
+                    Generate
+                </button>
+
+                <!-- Dropdown Container -->
+                <div class="relative w-full sm:w-64">
+                    <button 
+                        id="dropdown-btn"
+                        class="bg-brand-red text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-red-600 transition-all w-full flex justify-between items-center text-lg"
+                    >
+                        <span id="dropdown-text" class="truncate mr-2">Select Type</span>
+                        <!-- Downward Triangle -->
+                        <svg class="w-4 h-4 text-black fill-current" viewBox="0 0 20 20">
+                            <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                        </svg>
+                    </button>
+                    
+                    <!-- Dropdown Menu -->
+                    <div 
+                        id="dropdown-menu" 
+                        class="dropdown-menu absolute hidden top-full left-0 w-full mt-2 bg-white rounded-md shadow-xl border border-gray-200 z-10 overflow-hidden"
+                    >
+                        <ul class="py-1 text-gray-700 font-medium">
+                            <li class="px-4 py-3 hover:bg-red-50 hover:text-brand-red cursor-pointer transition-colors" data-type="type1">Type 1: Reading Comprehension</li>
+                            <li class="px-4 py-3 hover:bg-red-50 hover:text-brand-red cursor-pointer transition-colors" data-type="type2">Type 2: Summarization</li>
+                            <li class="px-4 py-3 hover:bg-red-50 hover:text-brand-red cursor-pointer transition-colors" data-type="type3">Type 3: Sentence Order</li>
+                            <li class="px-4 py-3 hover:bg-red-50 hover:text-brand-red cursor-pointer transition-colors" data-type="type4">Type 4: Blank Inference</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column (Labels/Buttons) -->
+        <div class="flex-1 max-w-md flex flex-col justify-center gap-4 mt-8 md:mt-16">
+            <div class="bg-brand-red text-white text-center py-4 px-6 rounded-xl font-bold shadow-md">
+                Type 1 : Reading Comprehension<br>
+                <span class="text-sm font-normal">(true/false, meaning inference, main idea, etc.)</span>
+            </div>
+            <div class="bg-brand-red text-white text-center py-4 px-6 rounded-xl font-bold shadow-md">
+                Type 2 : Summarization
+            </div>
+            <div class="bg-brand-red text-white text-center py-4 px-6 rounded-xl font-bold shadow-md">
+                Type 3 : Sentence Order Arrangement
+            </div>
+            <div class="bg-brand-red text-white text-center py-4 px-6 rounded-xl font-bold shadow-md">
+                Type 4 : Blank Inference
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Output Section (Hidden by default) -->
+    <div id="output-section" class="max-w-4xl w-full mx-auto mt-12 bg-white rounded-xl shadow-xl border border-gray-200 p-6 hidden">
+        <div class="flex justify-between items-center border-b pb-3 mb-4">
+            <h3 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                <svg class="w-6 h-6 text-brand-red" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                Generated Question
+            </h3>
+            <button id="copy-btn" class="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 py-1.5 px-4 rounded-md font-medium transition-colors flex items-center gap-2">
+                Copy
+            </button>
+        </div>
+        <div id="output-content" class="text-lg text-gray-800 whitespace-pre-wrap leading-relaxed">
+            <!-- Output will be injected here -->
+        </div>
+    </div>
+
+    <!-- Custom Modal (Replacing alert()) -->
+    <div id="modal-overlay" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-2xl p-6 max-w-sm w-full mx-4 transform transition-all">
+            <h4 class="text-lg font-bold text-gray-900 mb-2" id="modal-title">Notice</h4>
+            <p class="text-gray-600 mb-6" id="modal-message">Message goes here.</p>
+            <div class="flex justify-end">
+                <button id="modal-close-btn" class="bg-brand-red hover:bg-red-600 text-white font-bold py-2 px-6 rounded transition-colors">
+                    OK
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // Default Sample Passage (Extra Feature requested)
+        const defaultSample = `Artificial intelligence (AI) is intelligence demonstrated by machines, as opposed to the natural intelligence displayed by animals including humans. Leading AI textbooks define the field as the study of "intelligent agents": any system that perceives its environment and takes actions that maximize its chance of achieving its goals. Some popular accounts use the term "artificial intelligence" to describe machines that mimic "cognitive" functions that humans associate with the human mind, such as "learning" and "problem solving".`;
+
+        // DOM Elements
+        const passageInput = document.getElementById('passage-input');
+        const dropdownBtn = document.getElementById('dropdown-btn');
+        const dropdownText = document.getElementById('dropdown-text');
+        const dropdownMenu = document.getElementById('dropdown-menu');
+        const generateBtn = document.getElementById('generate-btn');
+        const outputSection = document.getElementById('output-section');
+        const outputContent = document.getElementById('output-content');
+        const copyBtn = document.getElementById('copy-btn');
+        
+        // Modal Elements
+        const modalOverlay = document.getElementById('modal-overlay');
+        const modalMessage = document.getElementById('modal-message');
+        const modalCloseBtn = document.getElementById('modal-close-btn');
+
+        // State
+        let selectedType = null;
+        let selectedTypeName = "";
+
+        // Initialize with default sample
+        passageInput.value = defaultSample;
+
+        // Custom Alert Function
+        function showMessage(msg) {
+            modalMessage.textContent = msg;
+            modalOverlay.classList.remove('hidden');
+        }
+
+        modalCloseBtn.addEventListener('click', () => {
+            modalOverlay.classList.add('hidden');
+        });
+
+        // Dropdown Toggle Logic
+        dropdownBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dropdownMenu.classList.toggle('hidden');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!dropdownBtn.contains(e.target) && !dropdownMenu.contains(e.target)) {
+                dropdownMenu.classList.add('hidden');
+            }
+        });
+
+        // Dropdown Selection Logic
+        dropdownMenu.querySelectorAll('li').forEach(item => {
+            item.addEventListener('click', (e) => {
+                selectedType = e.target.getAttribute('data-type');
+                selectedTypeName = e.target.textContent;
+                
+                // Update button text
+                dropdownText.textContent = selectedTypeName;
+                dropdownText.title = selectedTypeName; // tooltip for long text
+                
+                // Close menu
+                dropdownMenu.classList.add('hidden');
+            });
+        });
+
+        // Generate Button Logic
+        generateBtn.addEventListener('click', () => {
+            const passage = passageInput.value.trim();
+
+            // Validations
+            if (!passage) {
+                showMessage("Please enter an English passage to generate a question.");
+                return;
+            }
+            if (!selectedType) {
+                showMessage("Please select a question type from the dropdown menu.");
+                return;
+            }
+
+            // Generate dummy content based on type
+            generateDummyQuestion(passage, selectedType);
+        });
+
+        // Copy to Clipboard Logic
+        copyBtn.addEventListener('click', () => {
+            const textToCopy = outputContent.innerText;
+            
+            // Using older robust method for broader compatibility (as per instructions)
+            const textArea = document.createElement("textarea");
+            textArea.value = textToCopy;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                
+                // Visual feedback
+                const originalText = copyBtn.innerText;
+                copyBtn.innerText = "Copied!";
+                copyBtn.classList.replace('bg-gray-100', 'bg-green-100');
+                copyBtn.classList.replace('text-gray-700', 'text-green-700');
+                
+                setTimeout(() => {
+                    copyBtn.innerText = originalText;
+                    copyBtn.classList.replace('bg-green-100', 'bg-gray-100');
+                    copyBtn.classList.replace('text-green-700', 'text-gray-700');
+                }, 2000);
+            } catch (err) {
+                showMessage("Failed to copy text.");
+            }
+            document.body.removeChild(textArea);
+        });
+
+        // --- DUMMY GENERATION LOGIC ---
+        function generateDummyQuestion(text, type) {
+            let resultHtml = "";
+            const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+
+            switch(type) {
+                case 'type1': // Reading Comprehension
+                    resultHtml = `
+<div class="font-bold text-xl mb-4">Q. What is the main idea of the following passage?</div>
+<div class="bg-gray-50 border border-gray-200 p-4 rounded-md mb-6 font-serif">
+    ${text}
+</div>
+<ol class="list-decimal list-inside space-y-3 ml-2">
+    <li>Machines will eventually replace human natural intelligence completely.</li>
+    <li>AI is the study of creating agents that mimic human cognitive functions to achieve goals.</li>
+    <li>Animals display a higher level of natural intelligence than machines.</li>
+    <li>Popular accounts of artificial intelligence are strictly limited to problem-solving.</li>
+    <li>The primary goal of AI is to author textbooks about intelligent agents.</li>
+</ol>
+<div class="mt-8 pt-4 border-t text-sm text-gray-500 font-bold">Answer: 2</div>`;
+                    break;
+
+                case 'type2': // Summarization
+                    resultHtml = `
+<div class="font-bold text-xl mb-4">Q. Choose the best summary for the passage below.</div>
+<div class="bg-gray-50 border border-gray-200 p-4 rounded-md mb-6 font-serif">
+    ${text}
+</div>
+<ol class="list-decimal list-inside space-y-3 ml-2">
+    <li>The passage explains that AI refers to machines exhibiting intelligence, primarily focusing on systems designed to perceive environments and achieve specific goals, resembling human cognition.</li>
+    <li>The passage argues that artificial intelligence is a dangerous tool that mimics human minds and will outsmart animal intelligence in the near future.</li>
+    <li>The passage outlines the history of AI textbooks and how authors have debated the definition of natural versus artificial cognitive functions.</li>
+    <li>The passage states that "learning" and "problem solving" are the only two functions that define whether a machine has achieved true artificial intelligence.</li>
+</ol>
+<div class="mt-8 pt-4 border-t text-sm text-gray-500 font-bold">Answer: 1</div>`;
+                    break;
+
+                case 'type3': // Sentence Order
+                    // Simple dummy shuffle for demonstration
+                    let s1 = sentences[0] ? sentences[0].trim() : "Sentence 1 is missing.";
+                    let s2 = sentences[1] ? sentences[1].trim() : "Sentence 2 is missing.";
+                    let s3 = sentences.length > 2 ? sentences.slice(2).join(' ').trim() : "Sentence 3 is missing.";
+                    
+                    resultHtml = `
+<div class="font-bold text-xl mb-4">Q. Given the starting sentence, arrange (A), (B), and (C) in the correct logical order.</div>
+<div class="bg-gray-50 border border-gray-200 p-4 rounded-md mb-6 font-serif">
+    ${s1}
+</div>
+<div class="space-y-4 mb-6">
+    <div class="flex gap-3"><span class="font-bold">(A)</span> <p>${s3}</p></div>
+    <div class="flex gap-3"><span class="font-bold">(B)</span> <p>${s2}</p></div>
+    <div class="flex gap-3"><span class="font-bold">(C)</span> <p>Consequently, the distinction between natural and artificial intelligence is becoming increasingly blurred in modern applications.</p></div>
+</div>
+<ol class="flex flex-wrap gap-6 font-medium">
+    <li>① (A)-(B)-(C)</li>
+    <li>② (B)-(A)-(C)</li>
+    <li>③ (B)-(C)-(A)</li>
+    <li>④ (C)-(A)-(B)</li>
+    <li>⑤ (C)-(B)-(A)</li>
+</ol>
+<div class="mt-8 pt-4 border-t text-sm text-gray-500 font-bold">Answer: 2 (B)-(A)-(C)</div>`;
+                    break;
+
+                case 'type4': // Blank Inference
+                    // Find a reasonably long word to blank out
+                    const words = text.split(' ');
+                    let longestWord = "";
+                    let replaceIndex = 0;
+                    
+                    for(let i=0; i<words.length; i++) {
+                        if(words[i].length > 8 && !words[i].includes('"')) {
+                            longestWord = words[i];
+                            replaceIndex = i;
+                            break;
+                        }
+                    }
+                    
+                    if(!longestWord && words.length > 5) {
+                        longestWord = words[5];
+                    }
+
+                    const blankedText = text.replace(longestWord, "<strong>[ __________ ]</strong>");
+
+                    resultHtml = `
+<div class="font-bold text-xl mb-4">Q. Which of the following best fits in the blank?</div>
+<div class="bg-gray-50 border border-gray-200 p-4 rounded-md mb-6 font-serif leading-loose">
+    ${blankedText}
+</div>
+<ol class="list-decimal list-inside space-y-3 ml-2 font-medium">
+    <li>${longestWord.replace(/[.,]/g, '').toLowerCase()}</li>
+    <li>destruction</li>
+    <li>misunderstanding</li>
+    <li>isolation</li>
+    <li>hesitation</li>
+</ol>
+<div class="mt-8 pt-4 border-t text-sm text-gray-500 font-bold">Answer: 1</div>`;
+                    break;
+            }
+
+            // Display the result
+            outputContent.innerHTML = resultHtml;
+            outputSection.classList.remove('hidden');
+            
+            // Scroll down to show output
+            outputSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    </script>
+</body>
+</html>
